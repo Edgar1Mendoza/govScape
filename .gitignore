@@ -1,0 +1,61 @@
+# ==========================================
+# Python Official Environment
+# ==========================================
+# Virtual environments
+venv/
+.venv/
+env/
+bin/
+include/
+lib/
+share/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+dist/
+build/
+eggs/
+*.egg-info/
+*.egg
+
+# ==========================================
+# Data & Large Files
+# ==========================================
+# Ignoring local data folders
+data/
+*.csv
+*.json
+*.sql
+*.sqlite3
+
+# ==========================================
+# Operating System Files
+# ==========================================
+# macOS (The "DS_Store" you mentioned)
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ==========================================
+# Editor / IDE (VS Code, PyCharm)
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==========================================
+# Environment Secrets (CRITICAL)
+# ==========================================
+.env
+.venv
