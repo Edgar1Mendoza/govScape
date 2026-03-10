@@ -33,7 +33,8 @@ def fetch_legislator_data():
 
         # Check if the request was successful
         response.raise_for_status()
-        
+
+        # Parse the JSON response
         data = response.json()
 
         # Get the current date and time in UTC timezone
@@ -42,12 +43,11 @@ def fetch_legislator_data():
         unix_ts = int(time.time())
 
         # Create the directory if it doesn't exist already
-        full_dir_path = os.path.join(BRONZE_PATH, f"\
-        ingested_at={partition_date}")
+        full_dir_path = os.path.join(BRONZE_PATH, f"ingested_at={partition_date}")
         os.makedirs(full_dir_path, exist_ok=True)
 
         # Save the data to a file
-        file_name = f"raw_comm_{unix_ts}.jason"
+        file_name = f"raw_comm_{unix_ts}.json"
         full_file_path = os.path.join(full_dir_path, file_name)
 
         # Write the data to the file in JSON format with indentation and UTF-8

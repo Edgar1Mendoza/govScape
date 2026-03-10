@@ -12,6 +12,8 @@ def transform_to_silver(processing_date):
     # Get the list of JSON files in the input directory
     partition_date = f"ingested_at={processing_date}"
     input_dir = os.path.join(BRONZE_PATH, partition_date)
+    print(input_dir)
+
     try:
         # Get the list of JSON files in the input directory
         files = [f for f in os.listdir(input_dir) if f.endswith('.json')]
@@ -20,6 +22,7 @@ def transform_to_silver(processing_date):
         print(f"Found {len(files)} JSON files in {input_dir}")
         # Sort list of JSON files in reverse so the most recent file is first
         files.sort()
+        print(files)
         target_file = files[-1]
 
         # Construct the full path to the JSON file
