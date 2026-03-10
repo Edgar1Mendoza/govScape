@@ -34,6 +34,13 @@ data/
 *.sqlite3
 
 # ==========================================
+# Logs & Execution Trace
+# ==========================================
+*.log
+govscape_pipeline.log
+logs/
+
+# ==========================================
 # Operating System Files
 # ==========================================
 # macOS (The "DS_Store" you mentioned)

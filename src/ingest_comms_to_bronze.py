@@ -2,8 +2,12 @@ import os
 import requests
 import json
 import time
+import logging
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -18,16 +22,18 @@ if not API_KEY:
 
 def fetch_legislator_data():
 
+    logger.info("Starting the data ingestion from Congress API")
+
     query_params = {
         "api_key": API_KEY,
         "format": "json",
         "currentMember": "true"
     }
 
-    print('Starting the fetch process')
-
     # Save the data to a file in JSON format
     try:
+        logger.info("Requesting data from Base URL: %s", BASE_URL)
+
         # Make a GET request to the API endpoint
         response = requests.get(BASE_URL, timeout=10, params=query_params)
 
@@ -37,13 +43,18 @@ def fetch_legislator_data():
         # Parse the JSON response
         data = response.json()
 
+        member_count = len(data.get("members", []))
+        logger.info("Successfully retrieved %s members from API", member_count)
+
         # Get the current date and time in UTC timezone
         now_utc = datetime.now(timezone.utc)
         partition_date = now_utc.strftime("%Y-%m-%d")
         unix_ts = int(time.time())
 
         # Create the directory if it doesn't exist already
-        full_dir_path = os.path.join(BRONZE_PATH, f"ingested_at={partition_date}")
+        full_dir_path = os.path.join(
+            BRONZE_PATH, f"ingested_at={partition_date}"
+        )
         os.makedirs(full_dir_path, exist_ok=True)
 
         # Save the data to a file
@@ -53,13 +64,15 @@ def fetch_legislator_data():
         # Write the data to the file in JSON format with indentation and UTF-8
         with open(full_file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-        print("Data saved successfully to:", full_file_path)
+
+        logger.info(
+            "Data ingestion from Congress API completed successfully"
+        )
         return full_file_path
+
     except Exception as e:
-        print("An error occurred:", str(e))
-        return None
+        logger.error("Critical error during data ingestion: %s", str(e))
+        raise
 
-
-if __name__ == "__main__":
-
-    raw = fetch_legislator_data()
+    if __name__ == "__main__":
+        fetch_legislator_data()
