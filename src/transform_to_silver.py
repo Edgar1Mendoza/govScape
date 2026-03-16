@@ -2,11 +2,10 @@ import pandas as pd
 import json
 import os
 import logging
+from config import BRONZE_PATH
+from config import SILVER_PATH
 
 logger = logging.getLogger(__name__)
-
-BRONZE_PATH = "data/bronze/legislators_comms"
-SILVER_PATH = "data/silver/legislators_comms"
 
 
 def transform_to_silver(processing_date):
@@ -89,8 +88,3 @@ def transform_to_silver(processing_date):
     except Exception as e:
         logger.error(f"Data transformation failed with error: {e}")
         raise
-
-
-if __name__ == "__main__":
-    execution_date = "2026-03-09"
-    transform_to_silver(execution_date)
