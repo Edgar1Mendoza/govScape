@@ -26,12 +26,24 @@ eggs/
 # ==========================================
 # Data & Large Files
 # ==========================================
-# Ignoring local data folders
-data/
+
+# Ignore everything in data
+data/*
+
+# Allow folders inside data
+!data/**/
+
+# Allow gitkeep files
+!**/.gitkeep
+
+# ==========================================
+# Global security for data extensions
+# ==========================================
 *.csv
 *.json
 *.sql
 *.sqlite3
+*.parquet
 
 # ==========================================
 # Logs & Execution Trace
