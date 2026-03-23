@@ -2,8 +2,24 @@ import pandas as pd
 import json
 import os
 import logging
-from config import BRONZE_PATH
-from config import SILVER_PATH
+from config import BRONZE_PATH, SILVER_PATH
+
+# ==========================================
+# DATA QUALITY CONFIGURATION (EXPECTATIONS)
+# ==========================================
+
+# 1. Volume Expectations
+CRITICAL_MIN_RECORDS = 50 
+
+# 2. Geographic Expectations
+EXPECTED_MIN_STATES = 20  
+
+# 3. Column Integrity
+# HARD RULES: Pipeline will STOP if these have nulls
+MANDATORY_COLUMNS = ['bioguideId', 'state']
+
+# SOFT RULES: Pipeline will continue but log a WARNING
+OPTIONAL_COLUMNS = ['name', 'partyName']
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +95,12 @@ def transform_to_silver(processing_date):
         file_name = "legislators_refined.parquet"
         full_file_path = os.path.join(full_dir_path, file_name)
 
+        # Data Quality Checks (Validation)
+        if not validate_silver_data(silver_df):
+            logger.critical("Pipeline halted: Silver data does not meet quality standards")
+            raise ValueError("Data quality check failed")
+        
+        # Save the DataFrame to Parquet file
         silver_df.to_parquet(full_file_path, index=False)
         logger.info(
             "Silver layer data successfully saved to %s", full_file_path
@@ -88,3 +110,37 @@ def transform_to_silver(processing_date):
     except Exception as e:
         logger.error(f"Data transformation failed with error: {e}")
         raise
+
+
+def validate_silver_data(df):
+    """
+    Performs multi-layer data validation:
+    1. Volume: Minimum record threshold.
+    2. Nullability: Enforces MANDATORY vs OPTIONAL fields.
+    3. Distribution: Minimum geographic representation (States).
+    """
+
+    # Rule 1 Minimum records (Preventing empty/partial files)
+    if len(df) < CRITICAL_MIN_RECORDS:
+        logger.error(f'Quality check failed: Less than {CRITICAL_MIN_RECORDS} records found')
+        return False
+
+    # Rule 2: Critical Columns No Nulls
+    for col in MANDATORY_COLUMNS:
+        null_count = df[col].isnull().sum()
+        if null_count > 0:
+            logger.error(f'Quality Check Failed: Column {col} has {null_count} null values')
+
+    for col in OPTIONAL_COLUMNS:
+        null_count = df[col].insull().sum()
+        if null_count > 0:
+            logger.warning(f'Quality Check Warning: Column {col} has {null_count} null values')
+
+    # Rule 3: Business Logic Check
+    unique_states = df['state'].nunique()
+    if unique_states < EXPECTED_MIN_STATES:
+        logger.error(f"Quality Check Warning: Less than {EXPECTED_MIN_STATES} unique states found")
+        return False
+
+    logger.info("Data quality check passed")
+    return True
