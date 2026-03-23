@@ -120,23 +120,28 @@ def validate_silver_data(df):
     3. Distribution: Minimum geographic representation (States).
     """
 
-    # Rule 1 Minimum records (Preventing empty/partial files)
+    # --- CHECK 1: Volume Integrity ---
+    # Ensure the API didn't return a truncated or empty response.
     if len(df) < CRITICAL_MIN_RECORDS:
         logger.error(f'Quality check failed: Less than {CRITICAL_MIN_RECORDS} records found')
         return False
 
-    # Rule 2: Critical Columns No Nulls
+    # --- CHECK 2: Schema & Nullability (Hard Stop) ---
+    # Prevent "Pipeline Breakage" in the Gold layer due to missing IDs or States.
     for col in MANDATORY_COLUMNS:
         null_count = df[col].isnull().sum()
         if null_count > 0:
             logger.error(f'Quality Check Failed: Column {col} has {null_count} null values')
 
+    # --- CHECK 3: Data Quality (Soft Warning) ---
+    # Optional columns are logged but don't break the pipeline.
     for col in OPTIONAL_COLUMNS:
         null_count = df[col].insull().sum()
         if null_count > 0:
             logger.warning(f'Quality Check Warning: Column {col} has {null_count} null values')
 
-    # Rule 3: Business Logic Check
+    # --- CHECK 4: Geographic Coverage (Business Logic) ---
+    # Verifying that the data represents a national scope, not a partial extract.
     unique_states = df['state'].nunique()
     if unique_states < EXPECTED_MIN_STATES:
         logger.error(f"Quality Check Warning: Less than {EXPECTED_MIN_STATES} unique states found")
