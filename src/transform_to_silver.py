@@ -54,28 +54,40 @@ def validate_silver_data(df):
     # --- CHECK 1: Volume Integrity ---
     # Ensure the API didn't return a truncated or empty response.
     if len(df) < CRITICAL_MIN_RECORDS:
-        logger.error(f'Quality check failed: Less than {CRITICAL_MIN_RECORDS} records found')
+        logger.error(
+            f'Quality check failed: '
+            f'Less than {CRITICAL_MIN_RECORDS} records found'
+        )
         return False
 
     # --- CHECK 2: Schema & Nullability (Hard Stop) ---
-    # Prevent "Pipeline Breakage" in the Gold layer due to missing IDs or States.
+    # Prevent "Pipeline Breakage" in the Gold layer.
     for col in MANDATORY_COLUMNS:
         null_count = df[col].isnull().sum()
         if null_count > 0:
-            logger.error(f'Quality Check Failed: Column {col} has {null_count} null values')
+            logger.error(
+                f'Quality Check Failed: '
+                f'Column {col} has {null_count} null values'
+            )
 
     # --- CHECK 3: Data Quality (Soft Warning) ---
     # Optional columns are logged but don't break the pipeline.
     for col in OPTIONAL_COLUMNS:
         null_count = df[col].isnull().sum()
         if null_count > 0:
-            logger.warning(f'Quality Check Warning: Column {col} has {null_count} null values')
+            logger.warning(
+                f'Quality Check Warning: '
+                f'Column {col} has {null_count} null values'
+            )
 
     # --- CHECK 4: Geographic Coverage (Business Logic) ---
-    # Verifying that the data represents a national scope, not a partial extract.
+    # Verifying the data represents a national scope, not a partial extract.
     unique_states = df['state'].nunique()
     if unique_states < EXPECTED_MIN_STATES:
-        logger.error(f"Quality Check Warning: Less than {EXPECTED_MIN_STATES} unique states found")
+        logger.error(
+            f'Quality Check Warning: '
+            f'Less than {EXPECTED_MIN_STATES} unique states found'
+        )
         return False
 
     logger.info("Data quality check passed")
@@ -144,10 +156,12 @@ def transform_to_silver(processing_date):
 
         # Data Quality Checks (Validation)
         if not validate_silver_data(silver_df):
-            logger.critical("Pipeline halted: Silver data does not meet quality standards")
+            logger.critical(
+                "Pipeline halted: Silver data does "
+                "not meet quality standards"
+            )
             raise ValueError("Data quality check failed")
 
-        print('Hasta la vista!')
         # Save the DataFrame to Parquet file
         silver_df.to_parquet(full_file_path, index=False)
         logger.info(
