@@ -4,17 +4,13 @@ import json
 import time
 import logging
 from datetime import datetime, timezone
-from dotenv import load_dotenv
-from config import BRONZE_PATH
+from config import BRONZE_PATH, API_KEY
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-load_dotenv()
-
 os.makedirs(BRONZE_PATH, exist_ok=True)
 BASE_URL = "https://api.congress.gov/v3/member"
-API_KEY = os.getenv("CONGRESS_API_KEY")
 
 if not API_KEY:
     raise ValueError("CONGRESS_API_KEY environment variable is not set")
