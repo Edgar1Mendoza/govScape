@@ -2,15 +2,14 @@ import pandas as pd
 import json
 import os
 import logging
-from config import BRONZE_PATH, SILVER_PATH, CRITICAL_MIN_RECORDS
-from config import EXPECTED_MIN_STATES, MANDATORY_COLUMNS, OPTIONAL_COLUMNS
+from config import config
 
 
 logger = logging.getLogger(__name__)
 
 
 # ==========================================
-# 2. DATA TRANSFORMATION LOGIC
+# DATA TRANSFORMATION LOGIC
 # ==========================================
 def clean_legislator_data(df):
 
@@ -35,7 +34,7 @@ def clean_legislator_data(df):
 
 
 # ==========================================
-# 3. DATA QUALITY CHECK
+# DATA QUALITY CHECK
 # ==========================================
 def validate_silver_data(df):
     """
@@ -47,16 +46,16 @@ def validate_silver_data(df):
 
     # --- CHECK 1: Volume Integrity ---
     # Ensure the API didn't return a truncated or empty response.
-    if len(df) < CRITICAL_MIN_RECORDS:
+    if len(df) < config.critical_min_records:
         logger.error(
             f'Quality check failed: '
-            f'Less than {CRITICAL_MIN_RECORDS} records found'
+            f'Less than {config.critical_min_records} records found'
         )
         return False
 
     # --- CHECK 2: Schema & Nullability (Hard Stop) ---
     # Prevent "Pipeline Breakage" in the Gold layer.
-    for col in MANDATORY_COLUMNS:
+    for col in config.mandatory_columns:
         null_count = df[col].isnull().sum()
         if null_count > 0:
             logger.error(
@@ -66,7 +65,7 @@ def validate_silver_data(df):
 
     # --- CHECK 3: Data Quality (Soft Warning) ---
     # Optional columns are logged but don't break the pipeline.
-    for col in OPTIONAL_COLUMNS:
+    for col in config.optional_columns:
         null_count = df[col].isnull().sum()
         if null_count > 0:
             logger.warning(
@@ -77,10 +76,10 @@ def validate_silver_data(df):
     # --- CHECK 4: Geographic Coverage (Business Logic) ---
     # Verifying the data represents a national scope, not a partial extract.
     unique_states = df['state'].nunique()
-    if unique_states < EXPECTED_MIN_STATES:
+    if unique_states < config.expected_min_states:
         logger.error(
             f'Quality Check Warning: '
-            f'Less than {EXPECTED_MIN_STATES} unique states found'
+            f'Less than {config.expected_min_states} unique states found'
         )
         return False
 
@@ -89,12 +88,12 @@ def validate_silver_data(df):
 
 
 # ==========================================
-# 4. MAIN ORCHESTRATION
+# MAIN ORCHESTRATION
 # ==========================================
 def transform_to_silver(processing_date):
     # Refines raw JSON data from Bronze to a structured Parquet in Silver.
     partition_date = f"ingested_at={processing_date}"
-    input_dir = os.path.join(BRONZE_PATH, partition_date)
+    input_dir = os.path.join(config.bronze_path, partition_date)
 
     try:
         logger.info(
@@ -141,7 +140,7 @@ def transform_to_silver(processing_date):
         logger.info("Data transformation completed successfully")
 
         # Prepare output directory for the Silver layer
-        full_dir_path = os.path.join(SILVER_PATH, partition_date)
+        full_dir_path = os.path.join(config.silver_path, partition_date)
         os.makedirs(full_dir_path, exist_ok=True)
 
         # Persist refined data as Parquet for optimized downstream analytics

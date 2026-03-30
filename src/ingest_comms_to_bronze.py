@@ -4,16 +4,13 @@ import json
 import time
 import logging
 from datetime import datetime, timezone
-from config import BRONZE_PATH, API_KEY
+from config import config
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-os.makedirs(BRONZE_PATH, exist_ok=True)
+os.makedirs(config.bronze_path, exist_ok=True)
 BASE_URL = "https://api.congress.gov/v3/member"
-
-if not API_KEY:
-    raise ValueError("CONGRESS_API_KEY environment variable is not set")
 
 
 def fetch_legislator_data():
@@ -21,7 +18,7 @@ def fetch_legislator_data():
     logger.info("Starting the data ingestion from Congress API")
 
     query_params = {
-        "api_key": API_KEY,
+        "api_key": config.congress_api_key.get_secret_value(),
         "format": "json",
         "currentMember": "true"
     }
@@ -49,7 +46,7 @@ def fetch_legislator_data():
 
         # Create the directory if it doesn't exist already
         full_dir_path = os.path.join(
-            BRONZE_PATH, f"ingested_at={partition_date}"
+            config.bronze_path, f"ingested_at={partition_date}"
         )
         os.makedirs(full_dir_path, exist_ok=True)
 
