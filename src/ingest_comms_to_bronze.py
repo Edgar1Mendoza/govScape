@@ -1,4 +1,3 @@
-import os
 import requests
 import json
 import time
@@ -9,7 +8,7 @@ from config import config
 # Configure logging
 logger = logging.getLogger(__name__)
 
-os.makedirs(config.bronze_path, exist_ok=True)
+config.bronze_path.mkdir(parents=True, exist_ok=True)
 BASE_URL = "https://api.congress.gov/v3/member"
 
 
@@ -45,14 +44,12 @@ def fetch_legislator_data():
         unix_ts = int(time.time())
 
         # Create the directory if it doesn't exist already
-        full_dir_path = os.path.join(
-            config.bronze_path, f"ingested_at={partition_date}"
-        )
-        os.makedirs(full_dir_path, exist_ok=True)
+        ful_dir_path = config.bronze_path / partition_date
+        ful_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Save the data to a file
-        file_name = f"raw_comm_{unix_ts}.json"
-        full_file_path = os.path.join(full_dir_path, file_name)
+        file_name = f"raw_comms_{unix_ts}.json"
+        full_file_path = ful_dir_path / file_name
 
         # Write the data to the file in JSON format with indentation and UTF-8
         with open(full_file_path, 'w', encoding='utf-8') as f:
