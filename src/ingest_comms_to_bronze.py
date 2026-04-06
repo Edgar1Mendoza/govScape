@@ -40,7 +40,8 @@ def fetch_legislator_data():
 
         # Get the current date and time in UTC timezone
         now_utc = datetime.now(timezone.utc)
-        partition_date = now_utc.strftime("%Y-%m-%d")
+        current_date = now_utc.strftime("%Y-%m-%d")
+        partition_date = f"ingested_at={current_date}"
         unix_ts = int(time.time())
 
         # Create the directory if it doesn't exist already
