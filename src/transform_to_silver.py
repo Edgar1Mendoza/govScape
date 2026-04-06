@@ -1,6 +1,5 @@
 import pandas as pd
 import json
-import os
 import logging
 from config import config
 
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 def clean_legislator_data(df):
 
     # Schema Selection
-    target_columns = ['bioguideId', 'name', 'partyName', 'state']
+    target_columns = ["bioguideId", "name", "partyName", "state"]
     silver_df = df[target_columns].copy()
 
     # Business Logic: Filter by Party
@@ -24,11 +23,9 @@ def clean_legislator_data(df):
     # Standarization: States to lowercase
     final_count = len(silver_df)
     filtered_count = initual_count - final_count
-    silver_df['state'] = silver_df['state'].str.lower()
+    silver_df["state"] = silver_df["state"].str.lower()
 
-    logger.info(
-        "Filtered %s legislators out of %s", filtered_count, initual_count
-    )
+    logger.info("Filtered %s legislators out of %s", filtered_count, initual_count)
 
     return silver_df
 
@@ -47,10 +44,7 @@ def validate_silver_data(df):
     # --- CHECK 1: Volume Integrity ---
     # Ensure the API didn't return a truncated or empty response.
     if len(df) < config.critical_min_records:
-        logger.error(
-            f'Quality check failed: '
-            f'Less than {config.critical_min_records} records found'
-        )
+        logger.error(f"Quality check failed: " f"Less than {config.critical_min_records} records found")
         return False
 
     # --- CHECK 2: Schema & Nullability (Hard Stop) ---
@@ -58,29 +52,20 @@ def validate_silver_data(df):
     for col in config.mandatory_columns:
         null_count = df[col].isnull().sum()
         if null_count > 0:
-            logger.error(
-                f'Quality Check Failed: '
-                f'Column {col} has {null_count} null values'
-            )
+            logger.error(f"Quality Check Failed: " f"Column {col} has {null_count} null values")
 
     # --- CHECK 3: Data Quality (Soft Warning) ---
     # Optional columns are logged but don't break the pipeline.
     for col in config.optional_columns:
         null_count = df[col].isnull().sum()
         if null_count > 0:
-            logger.warning(
-                f'Quality Check Warning: '
-                f'Column {col} has {null_count} null values'
-            )
+            logger.warning(f"Quality Check Warning: " f"Column {col} has {null_count} null values")
 
     # --- CHECK 4: Geographic Coverage (Business Logic) ---
     # Verifying the data represents a national scope, not a partial extract.
-    unique_states = df['state'].nunique()
+    unique_states = df["state"].nunique()
     if unique_states < config.expected_min_states:
-        logger.error(
-            f'Quality Check Warning: '
-            f'Less than {config.expected_min_states} unique states found'
-        )
+        logger.error(f"Quality Check Warning: " f"Less than {config.expected_min_states} unique states found")
         return False
 
     logger.info("Data quality check passed")
@@ -93,34 +78,30 @@ def validate_silver_data(df):
 def transform_to_silver(processing_date):
     # Refines raw JSON data from Bronze to a structured Parquet in Silver.
     partition_date = f"ingested_at={processing_date}"
-    input_dir = os.path.join(config.bronze_path, partition_date)
+    input_dir = config.bronze_path / partition_date
 
     try:
-        logger.info(
-            'Starting data transformation for date: %s', partition_date
-        )
+        logger.info("Starting data transformation for date: %s", partition_date)
 
-        if not os.path.exists(input_dir):
-            logger.warning('Input directory %s does not exist.', input_dir)
+        if not input_dir.exists():
+            logger.warning("Input directory %s does not exist.", input_dir)
             return None
 
         # Identify available JSON files in the partition
-        files = [f for f in os.listdir(input_dir) if f.endswith('.json')]
+        files = sorted(list(input_dir.glob("*.json")))
         if not files:
-            logger.warning(
-                'No JSON files found in %s. Skipping transformation', input_dir
-            )
+            logger.warning("No JSON files found in %s. Skipping transformation", input_dir)
             return None
 
-        # Sort and select the most recent file for processing
-        files.sort()
+        # Select the most recent file for processing
         target_file = files[-1]
-        input_path = os.path.join(input_dir, target_file)
 
-        logger.info('Processing latest JSON file: %s', target_file)
+        input_path = input_dir / target_file
+
+        logger.info("Processing latest JSON file: %s", target_file)
 
         # Raw data ingestion
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, "r", encoding="utf-8") as f:
             raw_data = json.load(f)
 
         # Data flattening and DataFrame initialization
@@ -140,26 +121,21 @@ def transform_to_silver(processing_date):
         logger.info("Data transformation completed successfully")
 
         # Prepare output directory for the Silver layer
-        full_dir_path = os.path.join(config.silver_path, partition_date)
-        os.makedirs(full_dir_path, exist_ok=True)
+        full_dir_path = config.silver_path / partition_date
+        full_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Persist refined data as Parquet for optimized downstream analytics
         file_name = "legislators_refined.parquet"
-        full_file_path = os.path.join(full_dir_path, file_name)
+        full_file_path = full_dir_path / file_name
 
         # Data Quality Checks (Validation)
         if not validate_silver_data(silver_df):
-            logger.critical(
-                "Pipeline halted: Silver data does "
-                "not meet quality standards"
-            )
+            logger.critical("Pipeline halted: Silver data does " "not meet quality standards")
             raise ValueError("Data quality check failed")
 
         # Save the DataFrame to Parquet file
         silver_df.to_parquet(full_file_path, index=False)
-        logger.info(
-            "Silver layer data successfully saved to %s", full_file_path
-        )
+        logger.info("Silver layer data successfully saved to %s", full_file_path)
         return silver_df
 
     except Exception as e:

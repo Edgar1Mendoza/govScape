@@ -16,11 +16,7 @@ def fetch_legislator_data():
 
     logger.info("Starting the data ingestion from Congress API")
 
-    query_params = {
-        "api_key": config.congress_api_key.get_secret_value(),
-        "format": "json",
-        "currentMember": "true"
-    }
+    query_params = {"api_key": config.congress_api_key.get_secret_value(), "format": "json", "currentMember": "true"}
 
     # Save the data to a file in JSON format
     try:
@@ -53,12 +49,10 @@ def fetch_legislator_data():
         full_file_path = ful_dir_path / file_name
 
         # Write the data to the file in JSON format with indentation and UTF-8
-        with open(full_file_path, 'w', encoding='utf-8') as f:
+        with open(full_file_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
 
-        logger.info(
-            "Data ingestion from Congress API completed successfully"
-        )
+        logger.info("Data ingestion from Congress API completed successfully")
         return full_file_path
 
     except Exception as e:
