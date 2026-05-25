@@ -9,10 +9,7 @@ from datetime import datetime, timezone
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.FileHandler("govscape_pipeline.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler("govscape_pipeline.log"), logging.StreamHandler()],
 )
 
 logger = logging.getLogger(__name__)
@@ -38,14 +35,10 @@ def run_pipeline():
 
         end_time = time.time()
         duration = end_time - start_time
-        logger.info(
-            f"Pipeline finished successfully in {duration:2f} seconds."
-            )
+        logger.info(f"Pipeline finished successfully in {duration:2f} seconds.")
 
     except Exception as e:
-        logger.error(
-            f"Pipeline failed with error: {e} : {time.time()} - {start_time}"
-            )
+        logger.error(f"Pipeline failed with error: {e} : {time.time()} - {start_time}")
         return
 
 

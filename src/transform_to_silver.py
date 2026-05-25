@@ -2,7 +2,8 @@ import pandas as pd
 import json
 import logging
 from config import config
-
+from schemas.legislators import LegislatorSchema
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -47,21 +48,20 @@ def validate_silver_data(df):
         logger.error(f"Quality check failed: " f"Less than {config.critical_min_records} records found")
         return False
 
-    # --- CHECK 2: Schema & Nullability (Hard Stop) ---
-    # Prevent "Pipeline Breakage" in the Gold layer.
-    for col in config.mandatory_columns:
-        null_count = df[col].isnull().sum()
-        if null_count > 0:
-            logger.error(f"Quality Check Failed: " f"Column {col} has {null_count} null values")
+    # --- CHECK 2: Schema ---
+    records = df.to_dict(orient="records")
 
-    # --- CHECK 3: Data Quality (Soft Warning) ---
-    # Optional columns are logged but don't break the pipeline.
-    for col in config.optional_columns:
-        null_count = df[col].isnull().sum()
-        if null_count > 0:
-            logger.warning(f"Quality Check Warning: " f"Column {col} has {null_count} null values")
+    try:
+        for record in records:
+            LegislatorSchema(**record)
 
-    # --- CHECK 4: Geographic Coverage (Business Logic) ---
+        logger.info("Data quality and schema verification completed successfully.")
+
+    except ValidationError as e:
+        logger.error(f"Quality Check Error: " f"Schema validation error: {e}")
+        return False
+
+    # --- CHECK 3: Geographic Coverage (Business Logic) ---
     # Verifying the data represents a national scope, not a partial extract.
     unique_states = df["state"].nunique()
     if unique_states < config.expected_min_states:
