@@ -6,7 +6,7 @@ from transform_to_silver import clean_legislator_data
 
 def test_clean_legislator_data_filters_democrats():
     """
-    PRUEBA: ¿Realmente se queda solo con los Demócratas y limpia el estado?
+    TEST: ¿Does it really stick with the Democrats and clean up the state?
     """
     # 1. CREATE RAW DATA (MOCK DATA)
     raw_data = pd.DataFrame(

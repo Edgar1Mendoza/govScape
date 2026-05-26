@@ -7,6 +7,8 @@ packaging==26.0
 pandas==3.0.1
 pluggy==1.6.0
 pyarrow==23.0.1
+pydantic==2.12.5
+pydantic-settings==2.13.1
 Pygments==2.19.2
 pytest==9.0.2
 python-dateutil==2.9.0.post0

@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     congress_api_key: SecretStr = Field(alias="CONGRESS_API_KEY")
 
-    BASE_DIR: Path = Path(__file__).resolve().parent
+    BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
     base_data_path: Path = BASE_DIR / "data"
 
