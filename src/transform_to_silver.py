@@ -121,7 +121,7 @@ def transform_to_silver(processing_date):
         logger.info("Data transformation completed successfully")
 
         # Prepare output directory for the Silver layer
-        full_dir_path = config.silver_path / partition_date
+        full_dir_path = config.silver_path / "legislators_comms" / partition_date
         full_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Persist refined data as Parquet for optimized downstream analytics

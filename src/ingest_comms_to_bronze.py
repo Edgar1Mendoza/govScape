@@ -41,7 +41,7 @@ def fetch_legislator_data():
         unix_ts = int(time.time())
 
         # Create the directory if it doesn't exist already
-        ful_dir_path = config.bronze_path / partition_date
+        ful_dir_path = config.bronze_path / "legislators_comms" / partition_date
         ful_dir_path.mkdir(parents=True, exist_ok=True)
 
         # Save the data to a file
