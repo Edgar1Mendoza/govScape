@@ -51,12 +51,29 @@ def fetch_bills_data():
                 "offset": offset,
             }
 
-            response = requests.get(BASE_URL, timeout=25, params=query_params)
-            response.raise_for_status()
+            response = 0
+            max_retries = 3
+            retry_count = 0
+            backoff_factor = 5
+
+            while retry_count < max_retries:
+                try:
+                    response = requests.get(BASE_URL, timeout=60, params=query_params)
+                    response.raise_for_status()
+                    break
+                except requests.exceptions.RequestException as e:
+                    retry_count += 1
+                    if retry_count == max_retries:
+                        logger.error(f"Failed to fetch data after {max_retries} retries: {e}")
+                        raise
+
+                    wait_time = retry_count * backoff_factor
+                    logger.warning(f"Network error, retrying in {wait_time} seconds: {e}")
+                    time.sleep(wait_time)
+
             data = response.json()
 
             current_batch = data.get("bills", [])
-            # all_bills.extend(current_batch)
 
             if current_batch:
                 full_name = f"raw_bills_offset_{offset}_{unix_ts}.json"
@@ -73,8 +90,7 @@ def fetch_bills_data():
             else:
                 has_more_data = False
 
-        # ARREGLA EL PUTO ALL_BILLS ARRAY (EN EL FUTURO)
-        # logger.info(f"Pagination completed with {len(all_bills)} bills")
+            time.sleep(1)
 
         logger.info("Data successfully saved to %s", full_file_path)
 
