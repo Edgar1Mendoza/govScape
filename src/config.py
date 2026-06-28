@@ -6,23 +6,21 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE_DIR / "logs"
 
+LOG_FORMAT: str = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 LOG_FILE = "govscape_pipeline.log"
 LOG_FILE_PATH: Path = LOG_DIR / LOG_FILE
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-LOG_FORMAT: str = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
-logging.basicConfig(
-    level=logging.INFO, format=LOG_FORMAT, handlers=[logging.FileHandler(LOG_FILE_PATH), logging.StreamHandler()]
-)
+logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, handlers=[logging.FileHandler(LOG_FILE_PATH), logging.StreamHandler()])
 
 logger = logging.getLogger("govscape_config")
 
 
 class Settings(BaseSettings):
     congress_api_key: SecretStr = Field(alias="CONGRESS_API_KEY")
-    critical_min_records: int = Field(alias="CRITICAL_MIN_RECORDS", default=5)
-    expected_min_states: int = Field(alias="EXPECTED_MIN_STATES", default=5)
+    critical_min_records: int = Field(alias="CRITICAL_MIN_RECORDS", default=3)
+    expected_min_states: int = Field(alias="EXPECTED_MIN_STATES", default=3)
 
     BASE_DIR: Path = Path(__file__).resolve().parent.parent
 

@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import logging
+import sys
 from config import config
 from schemas.legislators import LegislatorSchema
 from pydantic import ValidationError
@@ -68,7 +69,7 @@ def validate_silver_data(df):
         logger.error(f"Quality Check Warning: " f"Less than {config.expected_min_states} unique states found")
         return False
 
-    logger.info("Data quality check passed")
+    logger.info("Data quality check passed. Unique states: %s", unique_states)
     return True
 
 
@@ -78,7 +79,7 @@ def validate_silver_data(df):
 def transform_to_silver(processing_date):
     # Refines raw JSON data from Bronze to a structured Parquet in Silver.
     partition_date = f"ingested_at={processing_date}"
-    input_dir = config.bronze_path / partition_date
+    input_dir = config.bronze_path / "legislators_comms" / partition_date
 
     try:
         logger.info("Starting data transformation for date: %s", partition_date)
@@ -141,3 +142,8 @@ def transform_to_silver(processing_date):
     except Exception as e:
         logger.error(f"Data transformation failed with error: {e}")
         raise
+
+
+if __name__ == "__main__":
+    processing_date = sys.argv[1]
+    transform_to_silver(processing_date)

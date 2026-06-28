@@ -16,3 +16,4 @@ python-dotenv==1.2.2
 requests==2.32.5
 six==1.17.0
 urllib3==2.6.3
+apache-airflow==2.10.2
